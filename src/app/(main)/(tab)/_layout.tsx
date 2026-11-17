@@ -50,7 +50,7 @@ const TabLayout = () => {
       <Tabs.Screen
         name="mcq"
         options={{
-          title: "MCQ",
+          title: "Test Series",
           tabBarIcon: ({ color }) => (
             <AppIcon name="ClipboardCheck" color={color} />
           ),

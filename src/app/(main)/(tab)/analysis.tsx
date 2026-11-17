@@ -9,7 +9,7 @@ const AnalysisScreen = () => {
   const styles = createStyles(colors);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <View style={styles.content}>
         <AppText variant="title" style={styles.title}>
           Coming Soon!

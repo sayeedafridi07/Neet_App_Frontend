@@ -83,7 +83,7 @@ export function AppButton({
           color={getLoaderColor(colors, variant)}
         />
       ) : (
-        <AppText variant="smallBold" style={styles.texts[variant]}>
+        <AppText variant="button" style={styles.texts[variant]}>
           {children}
         </AppText>
       )}

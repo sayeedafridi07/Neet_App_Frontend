@@ -24,7 +24,7 @@ const InitialLayout = () => {
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: colors.background,
+            // backgroundColor: colors.background,
           },
         }}
       >

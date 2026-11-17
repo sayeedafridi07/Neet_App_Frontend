@@ -10,13 +10,6 @@ const axiosInstance = axios.create({
   timeout: 10000,
 });
 
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  message: string;
-  success: boolean;
-}
-
 interface ApiConnectorConfig {
   method: Method;
   url: string;

@@ -64,7 +64,7 @@ const AppTopBar = ({
       },
 
       actionContainer: {
-        width: 40,
+        minWidth: 40,
         alignItems: "flex-end",
         justifyContent: "center",
       },
@@ -92,7 +92,7 @@ const AppTopBar = ({
 
       {/* Title */}
       <View style={styles.titleContainer}>
-        <AppText variant="small" style={styles.title}>
+        <AppText variant="subtitle" style={styles.title}>
           {title}
         </AppText>
       </View>

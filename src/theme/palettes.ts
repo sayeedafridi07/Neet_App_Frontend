@@ -1,89 +1,45 @@
 export const Colors = {
   light: {
-    // Main brand color. Use for primary actions, active states, etc.
-    primary: "#0D631B",
-
-    // Color used for secondary brand/accent elements.
-    secondary: "#00754A",
-
-    // Main screen background.
-    background: "#FAF8EF",
-
-    // Background for cards, inputs, sheets, etc.
-    surface: "#FFFFFF",
-
-    // Primary text color.
-    text: "#1E3932",
-
-    // Secondary/supporting text.
-    textSecondary: "#5F6F68",
-
-    // Low-emphasis text such as hints, placeholders, metadata.
-    textMuted: "#8A9691",
-
-    // Borders and dividers.
-    border: "#DDE5E1",
-
-    // Successful states, completed actions, correct answers.
-    success: "#00754A",
-
-    // Warning states and attention indicators.
-    warning: "#C47F17",
-
-    // Errors, validation messages, destructive actions.
-    error: "#C94C4C",
-
-    // Text/icons placed on dark or primary backgrounds.
+    primary: "#1DB954",
+    secondary: "#191414",
+    background: "#FFFFFF",
+    surface: "#F5F5F5",
+    text: "#191414",
+    textSecondary: "#5E5E5E",
+    textMuted: "#929292",
+    border: "#E5E5E5",
+    success: "#1DB954",
+    warning: "#FFA42B",
+    error: "#E91429",
     onPrimary: "#FFFFFF",
-
-    // Text/icons placed on secondary backgrounds.
     onSecondary: "#FFFFFF",
-
-    // Overlay color for modals, bottom sheets, etc.
     overlay: "rgba(0, 0, 0, 0.5)",
+    onCard: "#FFFFFF",
+    onCardMuted: "rgba(255, 255, 255, 0.8)",
+    onCardTrack: "rgba(255, 255, 255, 0.3)",
+    cardTile: "rgba(0, 0, 0, 0.25)",
+    shadow: "#000000",
   },
 
   dark: {
-    // Main brand color.
-    primary: "#1E9B6B",
-
-    // Secondary brand/accent elements.
-    secondary: "#49A078",
-
-    // Main screen background.
-    background: "#0E211A",
-
-    // Cards, inputs, sheets, etc.
-    surface: "#18352A",
-
-    // Primary text.
-    text: "#F1F7F4",
-
-    // Secondary/supporting text.
-    textSecondary: "#B8C9C1",
-
-    // Low-emphasis text.
-    textMuted: "#82978D",
-
-    // Borders and dividers.
-    border: "#2B4A3D",
-
-    // Success states.
-    success: "#4CAF7D",
-
-    // Warning states.
-    warning: "#E0A84B",
-
-    // Error states.
-    error: "#F07171",
-
-    // Text/icons placed on primary backgrounds.
-    onPrimary: "#FFFFFF",
-
-    // Text/icons placed on secondary backgrounds.
-    onSecondary: "#FFFFFF",
-
-    // Overlay.
+    primary: "#1ED760",
+    secondary: "#FFFFFF",
+    background: "#121212",
+    surface: "#1F1F1F",
+    text: "#FFFFFF",
+    textSecondary: "#B3B3B3",
+    textMuted: "#777777",
+    border: "#333333",
+    success: "#1ED760",
+    warning: "#FFA42B",
+    error: "#F3727F",
+    onPrimary: "#000000",
+    onSecondary: "#000000",
     overlay: "rgba(0, 0, 0, 0.7)",
+    onCard: "#FFFFFF",
+    onCardMuted: "rgba(255, 255, 255, 0.8)",
+    onCardTrack: "rgba(255, 255, 255, 0.3)",
+    cardTile: "rgba(0, 0, 0, 0.25)",
+    shadow: "#000000",
   },
-};
+} as const;
