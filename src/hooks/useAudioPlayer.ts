@@ -1,18 +1,21 @@
 import type { AudioLecture } from "@/types";
 import {
+  type AudioPlayer,
   setAudioModeAsync,
   useAudioPlayerStatus,
   useAudioPlayer as useExpoAudioPlayer,
 } from "expo-audio";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 2] as const;
 export const SKIP_SECONDS = 15;
 
-/**
- * Plays a single lecture for as long as the calling screen is mounted.
- * The player is owned by the screen, so closing it stops and releases audio.
- */
+// expo-audio only exposes mute as a property. Setting it from a plain helper
+// keeps the React Compiler from flagging it as mutating a hook's return value.
+const setPlayerMuted = (player: AudioPlayer, muted: boolean) => {
+  player.muted = muted;
+};
+
 export const useAudioPlayer = (lecture: AudioLecture | null) => {
   const player = useExpoAudioPlayer(
     lecture ? { uri: lecture.audioUrl } : null,
@@ -22,10 +25,20 @@ export const useAudioPlayer = (lecture: AudioLecture | null) => {
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
 
-  // Autoplay as soon as the screen opens
+  // Keep the latest speed / mute without making autoplay re-run on change
+  const settings = useRef({ rate, muted });
+  useEffect(() => {
+    settings.current = { rate, muted };
+  }, [rate, muted]);
+
+  // Autoplay each new player (a new lecture creates one). Speed and mute must
+  // be applied *before* play(): iOS starts at the rate stored at that moment,
+  // and a later setPlaybackRate is ignored while the item is still loading.
   useEffect(() => {
     if (!lecture) return;
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+    player.setPlaybackRate(settings.current.rate);
+    setPlayerMuted(player, settings.current.muted);
     player.play();
   }, [lecture, player]);
 
@@ -57,20 +70,16 @@ export const useAudioPlayer = (lecture: AudioLecture | null) => {
   );
 
   const cycleRate = useCallback(() => {
-    setRate((prev) => {
-      const i = PLAYBACK_RATES.indexOf(prev as (typeof PLAYBACK_RATES)[number]);
-      const next = PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length];
-      player.setPlaybackRate(next);
-      return next;
-    });
-  }, [player]);
+    const i = PLAYBACK_RATES.indexOf(rate as (typeof PLAYBACK_RATES)[number]);
+    const next = PLAYBACK_RATES[(i + 1) % PLAYBACK_RATES.length];
+    player.setPlaybackRate(next);
+    setRate(next);
+  }, [player, rate]);
 
   const toggleMute = useCallback(() => {
-    setMuted((prev) => {
-      player.muted = !prev;
-      return !prev;
-    });
-  }, [player]);
+    setPlayerMuted(player, !muted);
+    setMuted(!muted);
+  }, [player, muted]);
 
   // Fall back to the API duration until the file's metadata has loaded
   const duration = status.duration || lecture?.duration || 0;

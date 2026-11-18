@@ -77,10 +77,15 @@ const KeywordRevisionScreen = () => {
     [response],
   );
 
-  const openPlayer = (lecture: AudioLecture) =>
+  // The playlist is the tapped keyword's chapter, so previous / next stay in it
+  const openPlayer = (lecture: AudioLecture, playlist: AudioLecture[]) =>
     router.push({
       pathname: "/audio-player",
-      params: { lecture: JSON.stringify(lecture), source: "keyword" },
+      params: {
+        lecture: JSON.stringify(lecture),
+        playlist: JSON.stringify(playlist),
+        source: "keyword",
+      },
     });
 
   type Chapter = (typeof sections)[number];
@@ -102,7 +107,10 @@ const KeywordRevisionScreen = () => {
         <Fragment key={lecture.id}>
           {index > 0 && <View style={styles.rowDivider} />}
           <View style={styles.row}>
-            <AudioLectureCard lecture={lecture} onPress={openPlayer} />
+            <AudioLectureCard
+              lecture={lecture}
+              onPress={(l) => openPlayer(l, chapter.data)}
+            />
           </View>
         </Fragment>
       ))}
