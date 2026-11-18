@@ -1,6 +1,6 @@
 import AppIcon from "@/components/ui/AppIcon";
 import { AppText } from "@/components/ui/AppText";
-import { LECTURE_FALLBACK_IMAGE } from "@/data/audioLectures";
+import { LECTURE_FALLBACK_IMAGE } from "@/constants";
 import type { AudioLecture } from "@/types";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";

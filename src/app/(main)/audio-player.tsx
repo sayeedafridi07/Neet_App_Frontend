@@ -2,7 +2,7 @@ import AudioLectureCard from "@/components/core/audio/AudioLectureCard";
 import SeekBar from "@/components/core/audio/SeekBar";
 import AppIcon from "@/components/ui/AppIcon";
 import { AppText } from "@/components/ui/AppText";
-import { LECTURE_FALLBACK_IMAGE } from "@/data/audioLectures";
+import { LECTURE_FALLBACK_IMAGE } from "@/constants";
 import { SKIP_SECONDS, useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { Radius, ScreenHeight, ScreenWidth, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";

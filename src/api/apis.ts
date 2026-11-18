@@ -1,5 +1,5 @@
 // BASE URL
-export const BASE_URL = "http://192.168.29.169:4000/api/v1";
+export const BASE_URL = "http://192.168.0.2:4000/api/v1";
 // export const BASE_URL = "https://neet-app-backend-x7wi.onrender.com/api/v1";
 
 // AUTH ENDPOINTS
