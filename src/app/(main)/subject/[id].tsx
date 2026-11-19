@@ -1,14 +1,15 @@
+import { getSubjectById } from "@/api/subjects.api";
 import AppIcon from "@/components/ui/AppIcon";
 import { AppText } from "@/components/ui/AppText";
-import { getSubjectById } from "@/api/subjects.api";
 import { toSubject } from "@/data/subjects";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
-import { router, useLocalSearchParams, type Href } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -32,7 +33,11 @@ const SubjectDetailScreen = () => {
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: response } = useQuery({
+  const {
+    data: response,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["subject", id],
     queryFn: () => getSubjectById(id),
     enabled: !!id,
@@ -90,11 +95,7 @@ const SubjectDetailScreen = () => {
   ).filter((row) => row.count > 0);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.section }}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
       {/* Hero */}
       <View
         style={[
@@ -137,73 +138,93 @@ const SubjectDetailScreen = () => {
         </View>
       </View>
 
-      {/* Track-style list */}
-      <View style={styles.list}>
-        <View style={styles.sectionHeader}>
-          <AppText variant="subtitle" style={styles.sectionTitle}>
-            Start learning
-          </AppText>
-          <AppText variant="small" style={styles.sectionSubtitle}>
-            Listen, revise and practise {subject.title} your way
-          </AppText>
-        </View>
-        {rows.map((row) => (
-          <Pressable
-            key={row.key}
-            onPress={() => router.push(row.href)}
-            style={({ pressed }) => [
-              styles.row,
-              pressed && { backgroundColor: colors.surface },
-            ]}
-          >
-            <View
-              style={[
-                styles.rowArt,
-                row.variant === "filled" && { backgroundColor: subject.color },
-                row.variant === "tint" && {
-                  backgroundColor: `${subject.color}26`,
-                },
-                row.variant === "outline" && {
-                  backgroundColor: "transparent",
-                  borderWidth: 1.5,
-                  borderColor: `${subject.color}80`,
-                },
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + Spacing.section,
+        }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
+      >
+        {/* Track-style list */}
+        <View style={styles.list}>
+          <View style={styles.sectionHeader}>
+            <AppText variant="subtitle" style={styles.sectionTitle}>
+              Start learning
+            </AppText>
+            <AppText variant="small" style={styles.sectionSubtitle}>
+              Listen, revise and practise {subject.title} your way
+            </AppText>
+          </View>
+          {rows.map((row) => (
+            <Pressable
+              key={row.key}
+              onPress={() => router.push(row.href)}
+              style={({ pressed }) => [
+                styles.row,
+                pressed && { backgroundColor: colors.surface },
               ]}
             >
-              <AppIcon
-                name={row.icon}
-                size={24}
-                color={row.variant === "filled" ? colors.onCard : subject.color}
-                strokeWidth={2}
-              />
-            </View>
-            <View style={styles.rowText}>
-              <AppText
-                variant="bodyMedium"
-                style={styles.rowTitle}
-                numberOfLines={1}
+              <View
+                style={[
+                  styles.rowArt,
+                  row.variant === "filled" && {
+                    backgroundColor: subject.color,
+                  },
+                  row.variant === "tint" && {
+                    backgroundColor: `${subject.color}26`,
+                  },
+                  row.variant === "outline" && {
+                    backgroundColor: "transparent",
+                    borderWidth: 1.5,
+                    borderColor: `${subject.color}80`,
+                  },
+                ]}
               >
-                {row.title}
-              </AppText>
-              <AppText variant="small" style={styles.rowMeta} numberOfLines={1}>
-                {row.meta}
-              </AppText>
-            </View>
-            <AppIcon
-              name="ChevronRight"
-              size={20}
-              color={colors.textSecondary}
-            />
-          </Pressable>
-        ))}
-      </View>
-    </ScrollView>
+                <AppIcon
+                  name={row.icon}
+                  size={24}
+                  color={
+                    row.variant === "filled" ? colors.onCard : subject.color
+                  }
+                  strokeWidth={2}
+                />
+              </View>
+              <View style={styles.rowText}>
+                <AppText
+                  variant="bodyMedium"
+                  style={styles.rowTitle}
+                  numberOfLines={1}
+                >
+                  {row.title}
+                </AppText>
+                <AppText
+                  variant="small"
+                  style={styles.rowMeta}
+                  numberOfLines={1}
+                >
+                  {row.meta}
+                </AppText>
+              </View>
+              <AppIcon
+                name="ChevronRight"
+                size={20}
+                color={colors.textSecondary}
+              />
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const createStyles = (colors: Colors) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
+    scroll: { flex: 1 },
     loading: { alignItems: "center", justifyContent: "center" },
     hero: {
       paddingHorizontal: Spacing.lg,

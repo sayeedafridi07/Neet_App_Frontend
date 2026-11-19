@@ -34,6 +34,10 @@ const HomeScreen = () => {
   });
   const subjects = (response?.data?.subjects ?? []).map(toSubject).reverse();
 
+  console.log("====================================");
+  console.log(subjects);
+  console.log("====================================");
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <ScrollView
