@@ -10,6 +10,9 @@ import {
 import { FlatList, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+// Distinct from "Marked" (warning) so answered+marked needs no dot.
+export const ANSWERED_MARKED = "#7C3AED";
+
 type Colors = ReturnType<typeof useTheme>["colors"];
 type PaletteCellStatus = QuizPaletteStatus | QuizQuestionResult;
 
@@ -51,8 +54,9 @@ export const getStatusStyle = (
     case "WRONG":
       return { bg: colors.error, border: colors.error, text: colors.onPrimary };
     case QUIZ_ANSWER_STATUS.MARKED:
-    case QUIZ_ANSWER_STATUS.MARKED_AND_ANSWERED:
       return { bg: colors.warning, border: colors.warning, text: colors.onPrimary };
+    case QUIZ_ANSWER_STATUS.MARKED_AND_ANSWERED:
+      return { bg: ANSWERED_MARKED, border: ANSWERED_MARKED, text: colors.onPrimary };
     case "SKIPPED":
       return { bg: colors.surface, border: colors.border, text: colors.textSecondary };
     default: // NOT_VISITED
@@ -143,9 +147,6 @@ const QuestionPalette = ({
                   <AppText variant="smallBold" style={{ color: item.style.text }}>
                     {counts[item.key] ?? 0}
                   </AppText>
-                  {item.key === QUIZ_ANSWER_STATUS.MARKED_AND_ANSWERED && (
-                    <View style={styles.answeredBadge} />
-                  )}
                 </View>
                 <AppText variant="caption" style={styles.legendLabel}>
                   {item.label}
@@ -187,9 +188,6 @@ const QuestionPalette = ({
                   <AppText variant="smallBold" style={{ color: s.text }}>
                     {index + 1}
                   </AppText>
-                  {item === QUIZ_ANSWER_STATUS.MARKED_AND_ANSWERED && (
-                    <View style={styles.answeredBadge} />
-                  )}
                 </Pressable>
               );
             }}
@@ -264,19 +262,8 @@ const createStyles = (colors: Colors) =>
       justifyContent: "center",
       marginBottom: Spacing.md,
     },
-    currentBox: { borderWidth: 3, borderColor: colors.primary },
+    currentBox: { borderWidth: 2, borderColor: colors.text },
     pressed: { opacity: 0.7 },
-    answeredBadge: {
-      position: "absolute",
-      top: 3,
-      right: 3,
-      width: 8,
-      height: 8,
-      borderRadius: Radius.full,
-      backgroundColor: colors.success,
-      borderWidth: 1,
-      borderColor: colors.onPrimary,
-    },
   });
 
 export default QuestionPalette;

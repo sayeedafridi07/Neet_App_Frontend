@@ -9,6 +9,14 @@ export interface QuizChapterRef {
 }
 
 // Shape returned by GET /quizzes and GET /quizzes/:id
+export interface QuizProgress {
+  completedQuestions: number;
+  completedSets: number;
+  completionPercentage: number;
+  totalQuestions: number;
+  totalSets: number;
+}
+
 export interface ApiQuiz {
   id: string;
   title: string;
@@ -24,6 +32,7 @@ export interface ApiQuiz {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  progress?: QuizProgress;
 }
 
 export interface QuizzesData {

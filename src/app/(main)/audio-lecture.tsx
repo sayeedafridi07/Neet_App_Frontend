@@ -8,6 +8,7 @@ import { Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { AudioLecture } from "@/types";
 import { formatTotalDuration } from "@/utils/duration";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -50,7 +51,6 @@ const AudioLectureScreen = () => {
     isLoading: isLecturesLoading,
     isError: isLecturesError,
     refetch: refetchLectures,
-    isRefetching,
   } = useQuery({
     queryKey: ["audio-lectures", query],
     queryFn: () => getAudioLectures(query),
@@ -63,6 +63,7 @@ const AudioLectureScreen = () => {
   const isError = isClassesError || isLecturesError;
   const refetch = () =>
     isClassesError || !classId ? refetchClasses() : refetchLectures();
+  const pullToRefresh = usePullToRefresh(refetch);
   const totalDuration = lectures.reduce((sum, l) => sum + l.duration, 0);
 
   const openPlayer = (lecture: AudioLecture) =>
@@ -108,8 +109,8 @@ const AudioLectureScreen = () => {
             </View>
           ) : null
         }
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={pullToRefresh.refreshing}
+        onRefresh={pullToRefresh.onRefresh}
         ListEmptyComponent={
           isLoading ? (
             <ActivityIndicator color={colors.primary} style={styles.empty} />

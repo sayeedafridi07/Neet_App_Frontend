@@ -1,9 +1,6 @@
-import {
-  quizAttemptQueryKey,
-  saveQuizAnswer,
-  submitQuizAttempt,
-} from "@/api/quizAttempts.api";
+import { saveQuizAnswer, submitQuizAttempt } from "@/api/quizAttempts.api";
 import QuestionPalette from "@/components/core/quiz/QuestionPalette";
+import QuestionWebView from "@/components/core/quiz/QuestionWebView";
 import QuizTimer from "@/components/core/quiz/QuizTimer";
 import { AppButton } from "@/components/ui/AppButton";
 import AppIcon from "@/components/ui/AppIcon";
@@ -16,12 +13,12 @@ import {
   type QuizAnswerStatus,
   type QuizAttemptAnswer,
   type QuizPaletteStatus,
- ApiResponse, StartQuizAttemptData } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+  type StartQuizAttemptData,
+} from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   BackHandler,
@@ -30,7 +27,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -60,166 +56,136 @@ const statusFor = (
 const errorMessage = (error: unknown, fallback: string) =>
   (isAxiosError(error) && error.response?.data?.message) || fallback;
 
+const parse = (data?: string): Partial<StartQuizAttemptData> => {
+  try {
+    return data ? JSON.parse(data) : {};
+  } catch {
+    return {};
+  }
+};
+
 const QuizAttemptScreen = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = createStyles(colors);
-  // `id` is the attempt id. The instructions screen calls the start API and
-  // puts the response in the query cache; this screen never fetches it.
-  const { id: attemptId } = useLocalSearchParams<{ id: string }>();
-
-  const { data: response, dataUpdatedAt } = useQuery<
-    ApiResponse<StartQuizAttemptData>
-  >({
-    queryKey: quizAttemptQueryKey(attemptId),
-    queryFn: () => {
-      throw new Error("Quiz attempt must be started from the quiz page");
-    },
-    enabled: false,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
-  // Drop the cached questions when leaving; "Start Quiz" resumes the attempt.
   const queryClient = useQueryClient();
-  useEffect(
-    () => () =>
-      queryClient.removeQueries({ queryKey: quizAttemptQueryKey(attemptId) }),
-    [queryClient, attemptId],
-  );
+  const { id: attemptId, data } = useLocalSearchParams<{
+    id: string;
+    data: string;
+  }>();
 
-  const attemptData = response?.data;
-  const attempt = attemptData?.attempt;
-  const questions = useMemo(() => attemptData?.questions ?? [], [attemptData]);
-  const title = attemptData?.quiz.title ?? "Quiz";
-
+  // Parsed once — params don't change while on this screen.
+  const [{ attempt, quiz, questions = [], answers: serverAnswers = [] }] =
+    useState(() => parse(data));
   // Server's remainingSeconds anchored to when we received it, so a wrong
   // device clock can't shorten or extend the exam.
-  const deadline = attempt
-    ? dataUpdatedAt + attempt.remainingSeconds * 1000
-    : 0;
+  const [deadline] = useState(() =>
+    attempt ? Date.now() + attempt.remainingSeconds * 1000 : 0,
+  );
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  // null until the user changes something; until then the server copy is used.
-  const [localAnswers, setAnswers] = useState<QuizAttemptAnswer[] | null>(null);
-  // "Not visited" only exists on the client; the backend has no such status.
-  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]));
-  const [showPalette, setShowPalette] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
-  const submittedRef = useRef(false);
-
-  // Answers come back in questionOrder, aligned with `questions`.
-  const initialAnswers = useMemo<QuizAttemptAnswer[]>(() => {
-    if (!attemptData) return [];
-    const byId = new Map(attemptData.answers.map((a) => [a.questionId, a]));
-    return attemptData.questions.map(
+  const [answers, setAnswers] = useState<QuizAttemptAnswer[]>(() =>
+    questions.map(
       (q, i) =>
-        byId.get(q.id) ?? {
+        serverAnswers.find((a) => a.questionId === q.id) ?? {
           questionId: q.id,
           questionOrder: i + 1,
           selectedOptionId: null,
           status: QUIZ_ANSWER_STATUS.NOT_ANSWERED,
         },
-    );
-  }, [attemptData]);
-  const answers = localAnswers ?? initialAnswers;
-
-  const paletteStatuses = useMemo<QuizPaletteStatus[]>(
-    () =>
-      answers.map((a, i) =>
-        a.status === QUIZ_ANSWER_STATUS.NOT_ANSWERED && !visited.has(i)
-          ? "NOT_VISITED"
-          : a.status,
-      ),
-    [answers, visited],
+    ),
   );
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]));
+  const [showPalette, setShowPalette] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const scrollRef = useRef<ScrollView>(null);
+
+  const title = quiz?.title ?? "Quiz";
   const currentQuestion = questions[currentIndex];
   const currentAnswer = answers[currentIndex];
 
-  const updateAnswer = (
-    index: number,
+  const paletteStatuses: QuizPaletteStatus[] = answers.map((a, i) =>
+    a.status === QUIZ_ANSWER_STATUS.NOT_ANSWERED && !visited.has(i)
+      ? "NOT_VISITED"
+      : a.status,
+  );
+
+  const setAnswerAt = (index: number, value: QuizAttemptAnswer) =>
+    setAnswers((prev) => {
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
+    });
+
+  const saveAnswer = async (
     selectedOptionId: string | null,
     marked: boolean,
   ) => {
+    const index = currentIndex;
     const prevAnswer = answers[index];
-    const next: QuizAttemptAnswer = {
+
+    // Optimistic UI update
+    setAnswerAt(index, {
       ...prevAnswer,
       selectedOptionId,
       status: statusFor(selectedOptionId, marked),
-    };
-    const apply = (value: QuizAttemptAnswer) =>
-      setAnswers((prev) => {
-        const updated = [...(prev ?? initialAnswers)];
-        updated[index] = value;
-        return updated;
-      });
+    });
 
-    apply(next); // optimistic
-    if (!attempt) return;
-    saveQuizAnswer(attempt.id, {
-      questionId: next.questionId,
-      selectedOptionId,
-      markedForReview: marked,
-    }).catch((e) => {
-      apply(prevAnswer); // roll back so the screen matches what's saved
+    try {
+      await saveQuizAnswer(attemptId, {
+        questionId: prevAnswer.questionId,
+        selectedOptionId,
+        markedForReview: marked,
+      });
+    } catch (e) {
+      setAnswerAt(index, prevAnswer); // roll back so the screen matches what's saved
       Alert.alert(
         "Answer not saved",
         errorMessage(e, "Check your connection and try again."),
       );
-    });
+    }
   };
 
   const goTo = (index: number) => {
     if (index < 0 || index >= questions.length) return;
-    setVisited((prev) => (prev.has(index) ? prev : new Set(prev).add(index)));
+    setVisited((prev) => new Set(prev).add(index));
     setCurrentIndex(index);
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   };
 
   const handleSelectOption = (optionId: string) => {
-    if (!currentAnswer) return;
     // Tapping the selected option again clears it.
     const next = currentAnswer.selectedOptionId === optionId ? null : optionId;
-    updateAnswer(currentIndex, next, isMarked(currentAnswer.status));
+    saveAnswer(next, isMarked(currentAnswer.status));
   };
 
-  const handleMarkForReview = () => {
-    if (!currentAnswer) return;
-    updateAnswer(
-      currentIndex,
-      currentAnswer.selectedOptionId,
-      !isMarked(currentAnswer.status),
-    );
-  };
+  const handleMarkForReview = () =>
+    saveAnswer(currentAnswer.selectedOptionId, !isMarked(currentAnswer.status));
 
-  const handleClearResponse = () => {
-    if (!currentAnswer?.selectedOptionId) return;
-    updateAnswer(currentIndex, null, isMarked(currentAnswer.status));
-  };
+  const handleClearResponse = () =>
+    saveAnswer(null, isMarked(currentAnswer.status));
 
-  const submitMutation = useMutation({
-    mutationFn: () => submitQuizAttempt(attempt!.id),
-    onSuccess: (res) => {
-      const attemptId = res.data?.attemptId ?? attempt!.id;
+  const submit = async () => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      const res = await submitQuizAttempt(attemptId);
+      // Progress (completed sets / %) changed — refetch quiz lists & detail.
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["quiz"] });
       router.replace({
         pathname: "/quiz/result/[attemptId]",
-        params: { attemptId },
+        params: { attemptId: res.data?.attemptId ?? attemptId },
       });
-    },
-    onError: (e) => {
-      submittedRef.current = false;
+    } catch (e) {
+      setIsSubmitting(false);
       Alert.alert(
         "Submit failed",
         errorMessage(e, "Couldn't submit your quiz. Please try again."),
       );
-    },
-  });
-
-  const submit = useCallback(() => {
-    if (!attempt || submittedRef.current) return;
-    submittedRef.current = true;
-    submitMutation.mutate();
-  }, [attempt, submitMutation]);
+    }
+  };
 
   const confirmSubmit = () => {
     const answered = answers.filter((a) => a.selectedOptionId).length;
@@ -233,7 +199,7 @@ const QuizAttemptScreen = () => {
     );
   };
 
-  const confirmExit = useCallback(() => {
+  const confirmExit = () => {
     Alert.alert(
       "Leave quiz?",
       "Your answers are saved and the timer keeps running. Start the quiz again to resume.",
@@ -243,13 +209,13 @@ const QuizAttemptScreen = () => {
       ],
     );
     return true;
-  }, []);
+  };
 
   // Android hardware back → confirm instead of silently leaving.
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", confirmExit);
     return () => sub.remove();
-  }, [confirmExit]);
+  }, []);
 
   // No cached data, e.g. the app was reloaded on this screen.
   if (!attempt || !currentQuestion || !currentAnswer) {
@@ -322,87 +288,18 @@ const QuizAttemptScreen = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View key={currentQuestion.id} entering={FadeIn.duration(200)}>
-          <AppText variant="default" style={styles.questionText}>
-            {currentQuestion.question}
-          </AppText>
-
-          {!!currentQuestion.imageUrl && (
-            <Image
-              source={{ uri: currentQuestion.imageUrl }}
-              style={styles.questionImage}
-              contentFit="contain"
-              cachePolicy="memory-disk"
-              transition={200}
-            />
-          )}
-
-          <View style={styles.row}>
-            <AppText variant="smallBold" style={styles.optionsLabel}>
-              Select one option
-            </AppText>
-            {!!currentAnswer.selectedOptionId && (
-              <Pressable onPress={handleClearResponse} hitSlop={8}>
-                <AppText variant="caption" style={styles.clearText}>
-                  Clear response
-                </AppText>
-              </Pressable>
-            )}
-          </View>
-
-          <View style={styles.options}>
-            {options.map((option, index) => {
-              const selected = currentAnswer.selectedOptionId === option.id;
-              return (
-                <Pressable
-                  key={option.id}
-                  onPress={() => handleSelectOption(option.id)}
-                  style={({ pressed }) => [
-                    styles.option,
-                    selected && styles.optionSelected,
-                    pressed && styles.pressed,
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                >
-                  <View
-                    style={[styles.letter, selected && styles.letterSelected]}
-                  >
-                    <AppText
-                      variant="smallBold"
-                      style={{
-                        color: selected ? colors.onPrimary : colors.text,
-                      }}
-                    >
-                      {String.fromCharCode(65 + index)}
-                    </AppText>
-                  </View>
-                  <View style={styles.optionBody}>
-                    {!!option.text && (
-                      <AppText
-                        variant="small"
-                        style={[
-                          styles.text,
-                          selected && styles.optionTextSelected,
-                        ]}
-                      >
-                        {option.text}
-                      </AppText>
-                    )}
-                    {!!option.imageUrl && (
-                      <Image
-                        source={{ uri: option.imageUrl }}
-                        style={styles.optionImage}
-                        contentFit="contain"
-                        cachePolicy="memory-disk"
-                      />
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Animated.View>
+        <QuestionWebView
+          question={currentQuestion.question}
+          imageUrl={currentQuestion.imageUrl}
+          options={options}
+          selectedOptionId={currentAnswer.selectedOptionId}
+          onSelect={handleSelectOption}
+          onClear={handleClearResponse}
+          preloadUrls={questions
+            .slice(currentIndex, currentIndex + 4)
+            .flatMap((q) => [q.imageUrl, ...q.options.map((o) => o.imageUrl)])
+            .filter((u): u is string => !!u)}
+        />
       </ScrollView>
 
       <View
@@ -429,7 +326,7 @@ const QuizAttemptScreen = () => {
         {isLast ? (
           <AppButton
             onPress={confirmSubmit}
-            loading={submitMutation.isPending}
+            loading={isSubmitting}
             style={styles.navBtn}
           >
             Submit

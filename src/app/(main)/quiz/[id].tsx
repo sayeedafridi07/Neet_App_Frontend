@@ -1,16 +1,15 @@
-import { quizAttemptQueryKey, startQuizAttempt } from "@/api/quizAttempts.api";
+import { startQuizAttempt } from "@/api/quizAttempts.api";
 import { getQuizById } from "@/api/quizzes.api";
+import { ANSWERED_MARKED } from "@/components/core/quiz/QuestionPalette";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
-import { router, useLocalSearchParams } from "expo-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -37,7 +36,7 @@ const getColorLegend = (colors: Colors) => [
   {
     key: "notVisited",
     label: "Not visited",
-    bg: colors.surface,
+    bg: colors.background,
     border: colors.border,
     text: colors.text,
   },
@@ -62,6 +61,13 @@ const getColorLegend = (colors: Colors) => [
     border: colors.warning,
     text: colors.onPrimary,
   },
+  {
+    key: "answeredMarked",
+    label: "Answered & marked for review",
+    bg: ANSWERED_MARKED,
+    border: ANSWERED_MARKED,
+    text: colors.onPrimary,
+  },
 ];
 
 const QuizInstructionScreen = () => {
@@ -69,6 +75,7 @@ const QuizInstructionScreen = () => {
   const insets = useSafeAreaInsets();
   const styles = createStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
 
   const {
     data: response,
@@ -82,28 +89,19 @@ const QuizInstructionScreen = () => {
   });
   const quiz = response?.data;
 
-  const queryClient = useQueryClient();
-  const startMutation = useMutation({
+  const { mutate: startQuiz, isPending: isStartingQuiz } = useMutation({
     mutationFn: () => startQuizAttempt(id),
-    onSuccess: (res) => {
-      const attemptId = res.data?.attempt.id;
-      if (!res.success || !attemptId) {
-        Alert.alert("Couldn't start quiz", res.message || "Please try again.");
-        return;
-      }
-      // Hand the questions to the attempt screen via the cache, not route params
-      // (a full test is ~200 questions — too big to serialise into the URL).
-      queryClient.setQueryData(quizAttemptQueryKey(attemptId), res);
+    onSuccess: (response) => {
       router.replace({
         pathname: "/quiz/attempt/[id]",
-        params: { id: attemptId },
+        params: {
+          id: response.data?.attempt.id ?? "",
+          data: JSON.stringify(response.data),
+        },
       });
     },
     onError: (e) => {
-      const message =
-        (isAxiosError(e) && e.response?.data?.message) ||
-        "Check your connection and try again.";
-      Alert.alert("Couldn't start quiz", message);
+      console.log("startQuizAttempt error", e);
     },
   });
   const correctMarks = quiz?.correctMarks ?? 4;
@@ -177,19 +175,21 @@ const QuizInstructionScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Stats */}
-        <View style={styles.row}>
-          {stats.map((s) => (
-            <View key={s.label} style={styles.statCard}>
-              <AppText variant="subtitle" style={styles.statValue}>
-                {s.value}
-              </AppText>
-              <AppText variant="caption" style={styles.text}>
-                {s.label}
-              </AppText>
-            </View>
-          ))}
-        </View>
+        {/* Stats (hidden for chapter quizzes) */}
+        {quiz.type !== "CHAPTER" && (
+          <View style={styles.row}>
+            {stats.map((s) => (
+              <View key={s.label} style={styles.statCard}>
+                <AppText variant="subtitle" style={styles.statValue}>
+                  {s.value}
+                </AppText>
+                <AppText variant="caption" style={styles.text}>
+                  {s.label}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Marking scheme */}
         <View style={styles.section}>
@@ -275,8 +275,8 @@ const QuizInstructionScreen = () => {
       >
         <AppButton
           size="large"
-          onPress={() => startMutation.mutate()}
-          loading={startMutation.isPending}
+          onPress={() => startQuiz()}
+          loading={isStartingQuiz}
         >
           Start Quiz
         </AppButton>

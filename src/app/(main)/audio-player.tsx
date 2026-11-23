@@ -126,9 +126,17 @@ const AudioPlayerScreen = () => {
               nestedScrollEnabled
               showsVerticalScrollIndicator={false}
             >
-              <AppText variant="cardTitle" style={styles.keywordTitle}>
-                {lecture.title}
-              </AppText>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <AppText variant="heading" style={styles.keywordTitle}>
+                  {lecture.title}
+                </AppText>
+              </View>
             </ScrollView>
           ) : (
             <AppText variant="title" style={styles.title}>
@@ -137,7 +145,7 @@ const AudioPlayerScreen = () => {
           )}
           {!!lecture.description && (
             <AppText
-              variant="default"
+              variant="cardTitle"
               numberOfLines={2}
               style={[styles.description, isKeyword && { textAlign: "center" }]}
             >
@@ -350,12 +358,13 @@ const createStyles = (colors: Colors) =>
       borderColor: colors.border,
       borderRadius: Radius.lg,
       maxHeight: ScreenHeight * 0.5,
+      minHeight: ScreenHeight * 0.5,
     },
     keywordTitleContent: {
       paddingVertical: Spacing.xl,
       paddingHorizontal: Spacing.lg,
     },
-    keywordTitle: { color: colors.text },
+    keywordTitle: { color: colors.text, flex: 1 },
     title: { color: colors.text },
     description: { color: colors.text },
     controls: {

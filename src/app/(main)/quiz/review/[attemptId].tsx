@@ -1,4 +1,6 @@
 import QuestionPalette from "@/components/core/quiz/QuestionPalette";
+import { hasMath, RichText } from "@/components/common/RichText";
+import ReviewWebView from "@/components/core/quiz/ReviewWebView";
 import AppIcon from "@/components/ui/AppIcon";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
@@ -149,6 +151,11 @@ const QuestionCard = memo(function QuestionCard({
   const badge = getBadgeColors(item.result, colors);
   const options = [...item.options].sort((a, b) => a.order - b.order);
   const hasExplanation = !!item.explanation || !!item.explanationImageUrl;
+  // LaTeX anywhere → one WebView for the whole card body; else stay native.
+  const useWebView =
+    hasMath(item.question) ||
+    item.options.some((o) => !!o.text && hasMath(o.text)) ||
+    (!!item.explanation && hasMath(item.explanation));
 
   return (
     <View style={styles.card}>
@@ -171,90 +178,105 @@ const QuestionCard = memo(function QuestionCard({
         </View>
       </View>
 
-      <AppText variant="bodyMedium" style={styles.questionText}>
-        {item.question}
-      </AppText>
-      {!!item.imageUrl && (
-        <Image
-          source={{ uri: item.imageUrl }}
-          style={styles.questionImage}
-          contentFit="contain"
-          contentPosition="top"
-          cachePolicy="memory-disk"
-          transition={200}
-        />
-      )}
-
-      <AppText variant="smallBold" style={styles.optionsLabel}>
-        Options:
-      </AppText>
-      <View style={styles.options}>
-        {options.map((option, i) => {
-          const c = getOptionColors(option, colors);
-          return (
-            <View
-              key={option.id}
-              style={[
-                styles.option,
-                { backgroundColor: c.bg, borderColor: c.border },
-              ]}
-              accessibilityLabel={`Option ${String.fromCharCode(65 + i)}${
-                option.isCorrect ? ", correct answer" : ""
-              }${option.isSelected ? ", your answer" : ""}`}
-            >
-              <AppText variant="smallBold" style={{ color: c.text }}>
-                {String.fromCharCode(65 + i)}.
-              </AppText>
-              <View style={styles.optionBody}>
-                {!!option.text && (
-                  <AppText variant="small" style={{ color: c.text }}>
-                    {option.text}
-                  </AppText>
-                )}
-                {!!option.imageUrl && (
-                  <Image
-                    source={{ uri: option.imageUrl }}
-                    style={styles.optionImage}
-                    contentFit="contain"
-                    cachePolicy="memory-disk"
-                  />
-                )}
-                {option.isSelected && (
-                  <AppText variant="caption" style={{ color: c.text }}>
-                    Your answer
-                  </AppText>
-                )}
-              </View>
-              {option.isCorrect && (
-                <AppIcon name="CircleCheck" size={18} color={c.text} />
-              )}
-              {option.isSelected && !option.isCorrect && (
-                <AppIcon name="CircleX" size={18} color={c.text} />
-              )}
-            </View>
-          );
-        })}
-      </View>
-
-      {hasExplanation && (
-        <View style={styles.explanation}>
-          <AppText variant="smallBold" style={styles.explanationTitle}>
-            Explanation
-          </AppText>
-          {!!item.explanation && (
-            <AppText variant="small" style={styles.text}>
-              {item.explanation}
-            </AppText>
-          )}
-          {!!item.explanationImageUrl && (
+      {useWebView ? (
+        <ReviewWebView item={item} />
+      ) : (
+        <>
+          <RichText
+            content={item.question}
+            color={colors.text}
+            fontWeight="500"
+            style={styles.questionText}
+          />
+          {!!item.imageUrl && (
             <Image
-              source={{ uri: item.explanationImageUrl }}
+              source={{ uri: item.imageUrl }}
               style={styles.questionImage}
               contentFit="contain"
+              contentPosition="top"
               cachePolicy="memory-disk"
+              transition={200}
             />
           )}
-        </View>
+
+          <AppText variant="smallBold" style={styles.optionsLabel}>
+            Options:
+          </AppText>
+          <View style={styles.options}>
+            {options.map((option, i) => {
+              const c = getOptionColors(option, colors);
+              return (
+                <View
+                  key={option.id}
+                  style={[
+                    styles.option,
+                    { backgroundColor: c.bg, borderColor: c.border },
+                  ]}
+                  accessibilityLabel={`Option ${String.fromCharCode(65 + i)}${
+                    option.isCorrect ? ", correct answer" : ""
+                  }${option.isSelected ? ", your answer" : ""}`}
+                >
+                  <AppText variant="smallBold" style={{ color: c.text }}>
+                    {String.fromCharCode(65 + i)}.
+                  </AppText>
+                  <View style={styles.optionBody}>
+                    {!!option.text && (
+                      <RichText
+                        content={option.text}
+                        color={c.text}
+                        fontSize={17}
+                        lineHeight={26}
+                      />
+                    )}
+                    {!!option.imageUrl && (
+                      <Image
+                        source={{ uri: option.imageUrl }}
+                        style={styles.optionImage}
+                        contentFit="contain"
+                        cachePolicy="memory-disk"
+                      />
+                    )}
+                    {option.isSelected && (
+                      <AppText variant="caption" style={{ color: c.text }}>
+                        Your answer
+                      </AppText>
+                    )}
+                  </View>
+                  {option.isCorrect && (
+                    <AppIcon name="CircleCheck" size={18} color={c.text} />
+                  )}
+                  {option.isSelected && !option.isCorrect && (
+                    <AppIcon name="CircleX" size={18} color={c.text} />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+
+          {hasExplanation && (
+            <View style={styles.explanation}>
+              <AppText variant="smallBold" style={styles.explanationTitle}>
+                Explanation
+              </AppText>
+              {!!item.explanation && (
+                <RichText
+                  content={item.explanation}
+                  color={colors.text}
+                  fontSize={14}
+                  lineHeight={20}
+                />
+              )}
+              {!!item.explanationImageUrl && (
+                <Image
+                  source={{ uri: item.explanationImageUrl }}
+                  style={styles.questionImage}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+              )}
+            </View>
+          )}
+        </>
       )}
 
       <AppText variant="small" style={styles.marks}>

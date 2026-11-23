@@ -4,6 +4,7 @@ import { AppText } from "@/components/ui/AppText";
 import { toSubject } from "@/data/subjects";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams, type Href } from "expo-router";
 import {
@@ -33,15 +34,12 @@ const SubjectDetailScreen = () => {
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const {
-    data: response,
-    refetch,
-    isRefetching,
-  } = useQuery({
+  const { data: response, refetch } = useQuery({
     queryKey: ["subject", id],
     queryFn: () => getSubjectById(id),
     enabled: !!id,
   });
+  const pullToRefresh = usePullToRefresh(refetch);
   const subjectData = response?.data;
 
   if (!subjectData) {
@@ -144,9 +142,7 @@ const SubjectDetailScreen = () => {
           paddingBottom: insets.bottom + Spacing.section,
         }}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl {...pullToRefresh} />}
       >
         {/* Track-style list */}
         <View style={styles.list}>

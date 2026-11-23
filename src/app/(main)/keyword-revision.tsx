@@ -5,10 +5,11 @@ import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
 import type { AudioLecture } from "@/types";
-import { Fragment , useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import { formatTotalDuration } from "@/utils/duration";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -49,7 +50,6 @@ const KeywordRevisionScreen = () => {
     isLoading: isRevisionsLoading,
     isError: isRevisionsError,
     refetch: refetchRevisions,
-    isRefetching,
   } = useQuery({
     queryKey: ["keyword-revisions", query],
     queryFn: () => getKeywordRevisions(query),
@@ -61,6 +61,7 @@ const KeywordRevisionScreen = () => {
   const isError = isClassesError || isRevisionsError;
   const refetch = () =>
     isClassesError || !classId ? refetchClasses() : refetchRevisions();
+  const pullToRefresh = usePullToRefresh(refetch);
 
   // The API already groups revisions by chapter
   const sections = useMemo(
@@ -136,8 +137,8 @@ const KeywordRevisionScreen = () => {
         renderItem={renderChapter}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={pullToRefresh.refreshing}
+        onRefresh={pullToRefresh.onRefresh}
         ListEmptyComponent={
           isLoading ? (
             <ActivityIndicator color={colors.primary} style={styles.empty} />

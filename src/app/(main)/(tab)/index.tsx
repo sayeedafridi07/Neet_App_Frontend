@@ -5,6 +5,7 @@ import { AppText } from "@/components/ui/AppText";
 import { toSubject } from "@/data/subjects";
 import { Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import {
   ActivityIndicator,
@@ -27,11 +28,11 @@ const HomeScreen = () => {
     isLoading,
     isError,
     refetch,
-    isRefetching,
   } = useQuery({
     queryKey: ["subjects"],
     queryFn: getSubjects,
   });
+  const pullToRefresh = usePullToRefresh(refetch);
   const subjects = (response?.data?.subjects ?? []).map(toSubject).reverse();
 
   console.log("====================================");
@@ -43,9 +44,7 @@ const HomeScreen = () => {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl {...pullToRefresh} />}
       >
         <Header />
 

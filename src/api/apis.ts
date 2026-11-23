@@ -1,5 +1,5 @@
 // BASE URL
-export const BASE_URL = "http://192.168.0.2:4000/api/v1";
+export const BASE_URL = "http://192.168.1.170:4000/api/v1";
 // export const BASE_URL = "https://neet-app-backend-x7wi.onrender.com/api/v1";
 
 // AUTH ENDPOINTS
@@ -27,6 +27,7 @@ export const classEndpoints = {
 // QUIZ ENDPOINTS
 export const quizEndpoints = {
   QUIZZES_API: BASE_URL + "/quizzes",
+  GET_QUIZZES_API: BASE_URL + "/quizzes/student",
 };
 
 // SUBJECT ENDPOINTS

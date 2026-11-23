@@ -23,7 +23,10 @@ const AuthLayout = () => {
         }}
       />
       {/* No swipe-back mid-exam; the screen asks before leaving. */}
-      <Stack.Screen name="quiz/attempt/[id]" options={{ gestureEnabled: false }} />
+      <Stack.Screen
+        name="quiz/attempt/[id]"
+        options={{ gestureEnabled: false }}
+      />
     </Stack>
   );
 };
