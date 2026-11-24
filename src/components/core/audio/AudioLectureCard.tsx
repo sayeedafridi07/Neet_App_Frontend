@@ -1,9 +1,9 @@
 import AppIcon from "@/components/ui/AppIcon";
 import { AppText } from "@/components/ui/AppText";
 import { LECTURE_FALLBACK_IMAGE } from "@/constants";
-import type { AudioLecture } from "@/types";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
+import type { AudioLecture } from "@/types";
 import { formatDuration } from "@/utils/duration";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -13,12 +13,15 @@ interface AudioLectureCardProps {
   onPress: (lecture: AudioLecture) => void;
   /** Currently playing: green title + speaker icon in place of the duration */
   active?: boolean;
+  /** Premium content: lock icon replaces the duration */
+  locked?: boolean;
 }
 
 const AudioLectureCard = ({
   lecture,
   onPress,
   active = false,
+  locked = false,
 }: AudioLectureCardProps) => {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -52,7 +55,11 @@ const AudioLectureCard = ({
         )}
       </View>
 
-      {active ? (
+      {locked ? (
+        <View style={styles.lock}>
+          <AppIcon name="Lock" size={16} color={colors.textSecondary} />
+        </View>
+      ) : active ? (
         <AppIcon name="Volume2" size={18} color={colors.primary} />
       ) : (
         <AppText variant="small" style={styles.duration}>
@@ -82,6 +89,14 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     title: { flexShrink: 1, color: colors.text },
     activeTitle: { color: colors.primary },
     subtitle: { color: colors.textSecondary },
+    lock: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+    },
     duration: { color: colors.textMuted, fontVariant: ["tabular-nums"] },
   });
 

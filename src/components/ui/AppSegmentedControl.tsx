@@ -1,6 +1,7 @@
 import { AppText } from "@/components/ui/AppText";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
+import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import {
   type LayoutChangeEvent,
@@ -19,6 +20,7 @@ import Animated, {
 export type SegmentOption<T extends string | number> = {
   label: string;
   value: T;
+  isPremium?: boolean;
 };
 
 interface AppSegmentedControlProps<T extends string | number> {
@@ -29,8 +31,8 @@ interface AppSegmentedControlProps<T extends string | number> {
 }
 
 const PADDING = Spacing.xs;
+const CROWN_IMAGE = require("../../assets/images/crown.png");
 
-/** Reusable segmented control (e.g. Class 11 / Class 12) for audio, MCQ & keywords. */
 const AppSegmentedControl = <T extends string | number>({
   options,
   value,
@@ -87,6 +89,13 @@ const AppSegmentedControl = <T extends string | number>({
             <AppText style={[styles.label, selected && styles.labelSelected]}>
               {option.label}
             </AppText>
+            {option.isPremium && (
+              <Image
+                source={CROWN_IMAGE}
+                style={styles.crown}
+                contentFit="contain"
+              />
+            )}
           </Pressable>
         );
       })}
@@ -118,10 +127,13 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     },
     segment: {
       flex: 1,
+      flexDirection: "row",
+      gap: Spacing.xs,
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: Spacing.sm,
     },
+    crown: { width: 28, height: 28 },
     label: {
       color: colors.text,
     },

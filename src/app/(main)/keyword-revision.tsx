@@ -1,21 +1,22 @@
-import AudioLectureCard from "@/components/core/audio/AudioLectureCard";
-import { getClasses } from "@/api/classes.api";
 import { getKeywordRevisions } from "@/api/keywords.api";
+import AudioLectureCard from "@/components/core/audio/AudioLectureCard";
+import PremiumBanner from "@/components/core/premium/PremiumBanner";
 import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
-import type { AudioLecture } from "@/types";
-import { Fragment, useMemo, useState } from "react";
+import { useClasses } from "@/hooks/useClasses";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
+import type { AudioLecture } from "@/types";
 import { formatTotalDuration } from "@/utils/duration";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { router, useLocalSearchParams } from "expo-router";
+import { Fragment, useMemo } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   FlatList,
+  Pressable,
   StyleSheet,
   View,
 } from "react-native";
@@ -29,20 +30,19 @@ const KeywordRevisionScreen = () => {
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
 
   const {
-    data: classesResponse,
+    classOptions,
+    classId,
+    className,
+    selectedClass,
+    setSelectedClassId,
     isLoading: isClassesLoading,
     isError: isClassesError,
     refetch: refetchClasses,
-  } = useQuery({
-    queryKey: ["classes"],
-    queryFn: getClasses,
-  });
-  const { classes = [] } = classesResponse?.data || {};
-  const classOptions = classes.map((c) => ({ label: c.name, value: c.id }));
+  } = useClasses();
 
-  // Default to the first class until the user picks one
-  const [selectedClassId, setSelectedClassId] = useState<string>();
-  const classId = selectedClassId ?? classes[0]?.id;
+  const isLocked = !!selectedClass?.isPremium;
+  // TODO: route to the premium / paywall screen once it exists
+  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -110,7 +110,10 @@ const KeywordRevisionScreen = () => {
           <View style={styles.row}>
             <AudioLectureCard
               lecture={lecture}
-              onPress={(l) => openPlayer(l, chapter.data)}
+              locked={isLocked}
+              onPress={(l) =>
+                isLocked ? openPremium() : openPlayer(l, chapter.data)
+              }
             />
           </View>
         </Fragment>
@@ -137,6 +140,15 @@ const KeywordRevisionScreen = () => {
         renderItem={renderChapter}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          isLocked && sections.length > 0 ? (
+            <PremiumBanner
+              title={`Unlock ${className}`}
+              description="Revise every keyword for your exam with quick audio clips."
+              onPress={openPremium}
+            />
+          ) : null
+        }
         refreshing={pullToRefresh.refreshing}
         onRefresh={pullToRefresh.onRefresh}
         ListEmptyComponent={

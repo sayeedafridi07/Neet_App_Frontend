@@ -4,6 +4,7 @@ import type { Pagination } from "./api.types";
 export interface ApiClass {
   id: string;
   name: string;
+  isPremium?: boolean;
 }
 
 export interface ClassesData {

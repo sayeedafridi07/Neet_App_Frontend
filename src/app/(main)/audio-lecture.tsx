@@ -1,6 +1,6 @@
 import { getAudioLectures } from "@/api/audio.api";
-import { getClasses } from "@/api/classes.api";
 import AudioLectureCard from "@/components/core/audio/AudioLectureCard";
+import PremiumBanner from "@/components/core/premium/PremiumBanner";
 import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
@@ -8,10 +8,10 @@ import { Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { AudioLecture } from "@/types";
 import { formatTotalDuration } from "@/utils/duration";
+import { useClasses } from "@/hooks/useClasses";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -29,21 +29,19 @@ const AudioLectureScreen = () => {
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
 
   const {
-    data: classesResponse,
+    classOptions,
+    classId,
+    className,
+    selectedClass,
+    setSelectedClassId,
     isLoading: isClassesLoading,
     isError: isClassesError,
     refetch: refetchClasses,
-  } = useQuery({
-    queryKey: ["classes"],
-    queryFn: getClasses,
-  });
-  const { classes = [] } = classesResponse?.data || {};
-  const classOptions = classes.map((c) => ({ label: c.name, value: c.id }));
+  } = useClasses();
 
-  // Default to the first class until the user picks one
-  const [selectedClassId, setSelectedClassId] = useState<string>();
-  const classId = selectedClassId ?? classes[0]?.id;
-  const className = classes.find((c) => c.id === classId)?.name;
+  const isLocked = !!selectedClass?.isPremium;
+  // TODO: route to the premium / paywall screen once it exists
+  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -73,7 +71,11 @@ const AudioLectureScreen = () => {
     });
 
   const renderItem = ({ item }: { item: AudioLecture }) => (
-    <AudioLectureCard lecture={item} onPress={openPlayer} />
+    <AudioLectureCard
+      lecture={item}
+      locked={isLocked}
+      onPress={isLocked ? openPremium : openPlayer}
+    />
   );
 
   return (
@@ -97,15 +99,24 @@ const AudioLectureScreen = () => {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           lectures.length > 0 ? (
-            <View style={styles.header}>
-              <AppText variant="subtitle" style={styles.headerTitle}>
-                {className} Lectures
-              </AppText>
-              <AppText variant="small" style={styles.headerMeta}>
-                {lectures.length}{" "}
-                {lectures.length === 1 ? "lecture" : "lectures"} •{" "}
-                {formatTotalDuration(totalDuration)}
-              </AppText>
+            <View>
+              {isLocked && (
+                <PremiumBanner
+                  title={`Unlock ${className}`}
+                  description="Get exam-ready with complete audio lectures."
+                  onPress={openPremium}
+                />
+              )}
+              <View style={styles.header}>
+                <AppText variant="subtitle" style={styles.headerTitle}>
+                  {className} Lectures
+                </AppText>
+                <AppText variant="small" style={styles.headerMeta}>
+                  {lectures.length}{" "}
+                  {lectures.length === 1 ? "lecture" : "lectures"} •{" "}
+                  {formatTotalDuration(totalDuration)}
+                </AppText>
+              </View>
             </View>
           ) : null
         }

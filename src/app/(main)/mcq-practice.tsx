@@ -1,16 +1,16 @@
-import { getClasses } from "@/api/classes.api";
 import { getQuizzes } from "@/api/quizzes.api";
+import PremiumBanner from "@/components/core/premium/PremiumBanner";
 import AppIcon from "@/components/ui/AppIcon";
 import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
+import { useClasses } from "@/hooks/useClasses";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { ApiQuiz } from "@/types";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -28,21 +28,19 @@ const McqPracticeScreen = () => {
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
 
   const {
-    data: classesResponse,
+    classOptions,
+    classId,
+    className,
+    selectedClass,
+    setSelectedClassId,
     isLoading: isClassesLoading,
     isError: isClassesError,
     refetch: refetchClasses,
-  } = useQuery({
-    queryKey: ["classes"],
-    queryFn: getClasses,
-  });
-  const { classes = [] } = classesResponse?.data || {};
-  const classOptions = classes.map((c) => ({ label: c.name, value: c.id }));
+  } = useClasses();
 
-  // Default to the first class until the user picks one
-  const [selectedClassId, setSelectedClassId] = useState<string>();
-  const classId = selectedClassId ?? classes[0]?.id;
-  const className = classes.find((c) => c.id === classId)?.name;
+  const isLocked = !!selectedClass?.isPremium;
+  // TODO: route to the premium / paywall screen once it exists
+  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -81,7 +79,9 @@ const McqPracticeScreen = () => {
 
     return (
       <Pressable
-        onPress={() => router.push(`/quiz/${item.id}`)}
+        onPress={() =>
+          isLocked ? openPremium() : router.push(`/quiz/${item.id}`)
+        }
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
         <View style={styles.cardHeader}>
@@ -103,7 +103,11 @@ const McqPracticeScreen = () => {
               {progress ? ` • ${progress.totalSets} sets` : ""}
             </AppText>
           </View>
-          <AppIcon name="ChevronRight" size={20} color={colors.textMuted} />
+          {isLocked ? (
+            <AppIcon name="Lock" size={16} color={colors.textSecondary} />
+          ) : (
+            <AppIcon name="ChevronRight" size={20} color={colors.textMuted} />
+          )}
         </View>
 
         {progress && (
@@ -146,14 +150,24 @@ const McqPracticeScreen = () => {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           quizzes.length > 0 ? (
-            <View style={styles.header}>
-              <AppText variant="subtitle" style={styles.headerTitle}>
-                {className} Quizzes
-              </AppText>
-              <AppText variant="small" style={styles.headerMeta}>
-                {quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}
-                {totalQuestions > 0 ? ` • ${totalQuestions} questions` : ""}
-              </AppText>
+            <View>
+              {isLocked && (
+                <PremiumBanner
+                  title={`Unlock ${className}`}
+                  description="Practise every chapter with full MCQ sets."
+                  onPress={openPremium}
+                  style={styles.banner}
+                />
+              )}
+              <View style={styles.header}>
+                <AppText variant="subtitle" style={styles.headerTitle}>
+                  {className} Quizzes
+                </AppText>
+                <AppText variant="small" style={styles.headerMeta}>
+                  {quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}
+                  {totalQuestions > 0 ? ` • ${totalQuestions} questions` : ""}
+                </AppText>
+              </View>
             </View>
           ) : null
         }
@@ -237,6 +251,7 @@ const createStyles = (colors: Colors) =>
       backgroundColor: colors.primary,
     },
     progressText: { color: colors.primary },
+    banner: { marginBottom: Spacing.md },
     empty: { alignItems: "center", marginTop: Spacing.xl },
     emptyText: { color: colors.textSecondary },
   });
