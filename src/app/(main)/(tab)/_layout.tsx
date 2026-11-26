@@ -48,7 +48,7 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="mcq"
+        name="test-series"
         options={{
           title: "Test Series",
           tabBarIcon: ({ color }) => (

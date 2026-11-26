@@ -1,6 +1,6 @@
 import type { Pagination } from "./api.types";
 
-export type QuizType = "CHAPTER" | "SUBJECT" | "FULL" | (string & {});
+export type QuizType = "CHAPTER" | "TEST_SERIES";
 
 export interface QuizChapterRef {
   id: string;
@@ -45,4 +45,6 @@ export interface QuizParams {
   limit?: number;
   subjectId?: string;
   classId?: string;
+  search?: string;
+  type?: QuizType;
 }
