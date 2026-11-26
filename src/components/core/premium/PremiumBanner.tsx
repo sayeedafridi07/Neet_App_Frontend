@@ -3,6 +3,7 @@ import { AppText } from "@/components/ui/AppText";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
 
 const EARPHONE_IMAGE = require("../../../assets/icons/earphone.svg");
@@ -11,7 +12,6 @@ const CROWN_IMAGE = require("../../../assets/images/crown.png");
 interface PremiumBannerProps {
   title: string;
   description: string;
-  onPress: () => void;
   ctaLabel?: string;
   style?: StyleProp<ViewStyle>;
 }
@@ -20,7 +20,6 @@ interface PremiumBannerProps {
 const PremiumBanner = ({
   title,
   description,
-  onPress,
   ctaLabel = "Explore Premium",
   style,
 }: PremiumBannerProps) => {
@@ -54,7 +53,7 @@ const PremiumBanner = ({
         </View>
       </View>
 
-      <AppButton onPress={onPress} style={styles.cta}>
+      <AppButton onPress={() => router.push("/subscription")} style={styles.cta}>
         {ctaLabel}
       </AppButton>
     </View>

@@ -7,3 +7,4 @@ export * from "./subject.types";
 export * from "./class.types";
 export * from "./quiz.types";
 export * from "./quiz-attempt.types";
+export * from "./subscription.types";

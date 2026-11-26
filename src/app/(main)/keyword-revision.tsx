@@ -41,8 +41,6 @@ const KeywordRevisionScreen = () => {
   } = useClasses();
 
   const isLocked = !!selectedClass?.isPremium;
-  // TODO: route to the premium / paywall screen once it exists
-  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -112,7 +110,7 @@ const KeywordRevisionScreen = () => {
               lecture={lecture}
               locked={isLocked}
               onPress={(l) =>
-                isLocked ? openPremium() : openPlayer(l, chapter.data)
+                isLocked ? router.push("/subscription") : openPlayer(l, chapter.data)
               }
             />
           </View>
@@ -145,7 +143,6 @@ const KeywordRevisionScreen = () => {
             <PremiumBanner
               title={`Unlock ${className}`}
               description="Revise every keyword for your exam with quick audio clips."
-              onPress={openPremium}
             />
           ) : null
         }

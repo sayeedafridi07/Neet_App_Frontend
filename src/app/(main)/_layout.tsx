@@ -22,6 +22,10 @@ const AuthLayout = () => {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen
+        name="subscription"
+        options={{ presentation: "modal", animation: "slide_from_bottom" }}
+      />
       {/* No swipe-back mid-exam; the screen asks before leaving. */}
       <Stack.Screen
         name="quiz/attempt/[id]"

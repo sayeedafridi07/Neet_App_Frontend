@@ -40,8 +40,6 @@ const AudioLectureScreen = () => {
   } = useClasses();
 
   const isLocked = !!selectedClass?.isPremium;
-  // TODO: route to the premium / paywall screen once it exists
-  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -74,7 +72,7 @@ const AudioLectureScreen = () => {
     <AudioLectureCard
       lecture={item}
       locked={isLocked}
-      onPress={isLocked ? openPremium : openPlayer}
+      onPress={isLocked ? () => router.push("/subscription") : openPlayer}
     />
   );
 
@@ -104,7 +102,6 @@ const AudioLectureScreen = () => {
                 <PremiumBanner
                   title={`Unlock ${className}`}
                   description="Get exam-ready with complete audio lectures."
-                  onPress={openPremium}
                 />
               )}
               <View style={styles.header}>

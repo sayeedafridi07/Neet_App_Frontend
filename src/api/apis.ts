@@ -46,3 +46,11 @@ export const quizAttemptEndpoints = {
   RESULT_API: (attemptId: string) =>
     `${BASE_URL}/quizzes/attempts/${encodeURIComponent(attemptId)}/result`,
 };
+
+// SUBSCRIPTION ENDPOINTS
+export const subscriptionEndpoints = {
+  PLANS_API: BASE_URL + "/subscriptions/plans",
+  MY_SUBSCRIPTION_API: BASE_URL + "/subscriptions/me",
+  CREATE_ORDER_API: BASE_URL + "/subscriptions/checkout",
+  VERIFY_PAYMENT_API: BASE_URL + "/subscriptions/verify-payment",
+};

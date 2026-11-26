@@ -39,8 +39,6 @@ const McqPracticeScreen = () => {
   } = useClasses();
 
   const isLocked = !!selectedClass?.isPremium;
-  // TODO: route to the premium / paywall screen once it exists
-  const openPremium = () => {};
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -80,7 +78,7 @@ const McqPracticeScreen = () => {
     return (
       <Pressable
         onPress={() =>
-          isLocked ? openPremium() : router.push(`/quiz/${item.id}`)
+          isLocked ? router.push("/subscription") : router.push(`/quiz/${item.id}`)
         }
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
@@ -155,7 +153,6 @@ const McqPracticeScreen = () => {
                 <PremiumBanner
                   title={`Unlock ${className}`}
                   description="Practise every chapter with full MCQ sets."
-                  onPress={openPremium}
                   style={styles.banner}
                 />
               )}
