@@ -4,7 +4,7 @@ import { AppText } from "@/components/ui/AppText";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { ApiQuiz } from "@/types";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 type Colors = ReturnType<typeof useTheme>["colors"];
@@ -18,11 +18,17 @@ export function TestSeriesCard({ quiz, onPress }: Props) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const marking = [
+    { value: `+${quiz.correctMarks}`, color: colors.success },
+    { value: `-${Math.abs(quiz.wrongMarks)}`, color: colors.error },
+    { value: `${quiz.skippedMarks}`, color: colors.warning },
+  ];
+
   const renderStat = (
     icon: ComponentProps<typeof AppIcon>["name"],
     tint: string,
     label: string,
-    value: string,
+    value: ReactNode,
   ) => (
     <View style={styles.stat}>
       <View style={[styles.statIcon, { backgroundColor: tint + "22" }]}>
@@ -32,9 +38,13 @@ export function TestSeriesCard({ quiz, onPress }: Props) {
         <AppText variant="caption" style={styles.statLabel} numberOfLines={1}>
           {label}
         </AppText>
-        <AppText variant="bodyMedium" style={styles.statValue}>
-          {value}
-        </AppText>
+        {typeof value === "string" ? (
+          <AppText variant="bodyMedium" style={styles.statValue}>
+            {value}
+          </AppText>
+        ) : (
+          value
+        )}
       </View>
     </View>
   );
@@ -56,7 +66,18 @@ export function TestSeriesCard({ quiz, onPress }: Props) {
           "Target",
           colors.success,
           "Marking",
-          `+${quiz.correctMarks} / -${Math.abs(quiz.wrongMarks)}`,
+          <View style={styles.markingRow}>
+            {marking.map((m) => (
+              <View
+                key={m.color}
+                style={[styles.markingBox, { backgroundColor: m.color + "22" }]}
+              >
+                <AppText variant="smallBold" style={{ color: m.color }}>
+                  {m.value}
+                </AppText>
+              </View>
+            ))}
+          </View>,
         )}
         {renderStat(
           "ListOrdered",
@@ -109,4 +130,10 @@ const createStyles = (colors: Colors) =>
     statText: { flex: 1 },
     statLabel: { color: colors.textSecondary },
     statValue: { color: colors.text },
+    markingRow: { flexDirection: "row", gap: Spacing.xs, marginTop: 2 },
+    markingBox: {
+      flex: 1,
+      alignItems: "center",
+      borderRadius: Radius.xs,
+    },
   });

@@ -19,7 +19,6 @@ import { showToast } from "@/utils/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -169,8 +168,6 @@ const SubscriptionScreen = () => {
       style={styles.container}
       resizeMode="cover"
     >
-      <StatusBar style="light" />
-      {/* Photo stays visible behind the header, then fades into the theme background */}
       <LinearGradient
         colors={[colors.overlay, colors.overlay, colors.background]}
         locations={[0, 0.25, 0.5]}
