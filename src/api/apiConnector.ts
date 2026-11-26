@@ -3,7 +3,7 @@ import axios from "axios";
 
 import { useAuthStore } from "@/store/authStore";
 
-const ENABLE_API_LOGS = true;
+const ENABLE_API_LOGS = false;
 
 const axiosInstance = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,

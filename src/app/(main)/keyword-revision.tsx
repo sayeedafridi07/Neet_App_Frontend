@@ -5,6 +5,7 @@ import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import AppTopBar from "@/components/ui/AppTopBar";
 import { useClasses } from "@/hooks/useClasses";
+import { useIsPremium } from "@/hooks/useCurrentUser";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Radius, Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -40,7 +41,8 @@ const KeywordRevisionScreen = () => {
     refetch: refetchClasses,
   } = useClasses();
 
-  const isLocked = !!selectedClass?.isPremium;
+  const isPremiumUser = useIsPremium();
+  const isLocked = !!selectedClass?.isPremium && !isPremiumUser;
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {
@@ -110,7 +112,9 @@ const KeywordRevisionScreen = () => {
               lecture={lecture}
               locked={isLocked}
               onPress={(l) =>
-                isLocked ? router.push("/subscription") : openPlayer(l, chapter.data)
+                isLocked
+                  ? router.push("/subscription")
+                  : openPlayer(l, chapter.data)
               }
             />
           </View>

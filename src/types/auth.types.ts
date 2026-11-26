@@ -15,6 +15,7 @@ export interface AuthUser {
   schoolName: string | null;
   targetYear: number | null;
   profileComplete: boolean;
+  isPremium?: boolean;
 }
 
 export interface VerifyOtpData {

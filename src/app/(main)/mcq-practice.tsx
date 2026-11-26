@@ -1,4 +1,5 @@
 import { getQuizzes } from "@/api/quizzes.api";
+import { useIsPremium } from "@/hooks/useCurrentUser";
 import PremiumBanner from "@/components/core/premium/PremiumBanner";
 import AppIcon from "@/components/ui/AppIcon";
 import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
@@ -38,7 +39,8 @@ const McqPracticeScreen = () => {
     refetch: refetchClasses,
   } = useClasses();
 
-  const isLocked = !!selectedClass?.isPremium;
+  const isPremiumUser = useIsPremium();
+  const isLocked = !!selectedClass?.isPremium && !isPremiumUser;
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {

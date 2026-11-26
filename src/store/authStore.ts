@@ -1,17 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { AuthUser as User } from "@/types";
 import { zustandStorage } from "../config/storage";
-
-interface User {
-  id: string;
-  phone: string;
-  name: string | null;
-  city: string | null;
-  schoolName: string | null;
-  targetYear: number | null;
-  profileComplete: boolean;
-}
 
 interface AuthState {
   token: string | null;

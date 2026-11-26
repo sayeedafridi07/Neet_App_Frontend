@@ -3,9 +3,9 @@ import Header from "@/components/core/home/Header";
 import SubjectCard from "@/components/core/home/SubjectCard";
 import { AppText } from "@/components/ui/AppText";
 import { toSubject } from "@/data/subjects";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useQuery } from "@tanstack/react-query";
 import {
   ActivityIndicator,
@@ -33,11 +33,7 @@ const HomeScreen = () => {
     queryFn: getSubjects,
   });
   const pullToRefresh = usePullToRefresh(refetch);
-  const subjects = (response?.data?.subjects ?? []).map(toSubject).reverse();
-
-  console.log("====================================");
-  console.log(subjects);
-  console.log("====================================");
+  const subjects = (response?.data?.subjects ?? []).map(toSubject);
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>

@@ -1,5 +1,6 @@
 import { getAudioLectures } from "@/api/audio.api";
 import AudioLectureCard from "@/components/core/audio/AudioLectureCard";
+import { useIsPremium } from "@/hooks/useCurrentUser";
 import PremiumBanner from "@/components/core/premium/PremiumBanner";
 import AppSegmentedControl from "@/components/ui/AppSegmentedControl";
 import { AppText } from "@/components/ui/AppText";
@@ -39,7 +40,8 @@ const AudioLectureScreen = () => {
     refetch: refetchClasses,
   } = useClasses();
 
-  const isLocked = !!selectedClass?.isPremium;
+  const isPremiumUser = useIsPremium();
+  const isLocked = !!selectedClass?.isPremium && !isPremiumUser;
 
   const query = { page: 1, limit: 100, subjectId, classId };
   const {

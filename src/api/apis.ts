@@ -54,3 +54,8 @@ export const subscriptionEndpoints = {
   CREATE_ORDER_API: BASE_URL + "/subscriptions/checkout",
   VERIFY_PAYMENT_API: BASE_URL + "/subscriptions/verify-payment",
 };
+
+// USER ENDPOINTS
+export const userEndpoints = {
+  ME_API: BASE_URL + "/users/me",
+};

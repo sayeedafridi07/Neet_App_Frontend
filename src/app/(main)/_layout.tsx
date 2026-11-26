@@ -1,8 +1,11 @@
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTheme } from "@/theme/use-theme";
 import { Stack } from "expo-router";
 
 const AuthLayout = () => {
   const { colors } = useTheme();
+  // Only mounted when authenticated: keep user / premium status fresh.
+  useCurrentUser();
 
   return (
     <Stack

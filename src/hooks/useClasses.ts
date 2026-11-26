@@ -1,5 +1,6 @@
 import { getClasses } from "@/api/classes.api";
 import type { SegmentOption } from "@/components/ui/AppSegmentedControl";
+import { useIsPremium } from "@/hooks/useCurrentUser";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -8,24 +9,19 @@ import { useState } from "react";
  * (audio lectures, MCQ practice, keyword revision).
  */
 export const useClasses = () => {
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["classes"],
     queryFn: getClasses,
   });
   const { classes = [] } = data?.data || {};
+  const isPremiumUser = useIsPremium();
 
   const classOptions: SegmentOption<string>[] = classes.map((c) => ({
     label: c.name,
     value: c.id,
-    isPremium: c.isPremium,
+    isPremium: c.isPremium && !isPremiumUser,
   }));
 
-  // Default to the first class until the user picks one
   const [selectedClassId, setSelectedClassId] = useState<string>();
   const classId = selectedClassId ?? classes[0]?.id;
   const selectedClass = classes.find((c) => c.id === classId);
