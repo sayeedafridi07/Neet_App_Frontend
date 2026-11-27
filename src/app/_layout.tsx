@@ -7,7 +7,9 @@ import { useTheme } from "@/theme/use-theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { FullWindowOverlay } from "react-native-screens";
 import Toast from "react-native-toast-message";
 
 const InitialLayout = () => {
@@ -37,7 +39,14 @@ const InitialLayout = () => {
         </Stack.Protected>
       </Stack>
 
-      <Toast config={toastConfig} />
+      {/* On iOS, native modals cover the root view; FullWindowOverlay keeps toasts on top */}
+      {Platform.OS === "ios" ? (
+        <FullWindowOverlay>
+          <Toast config={toastConfig} />
+        </FullWindowOverlay>
+      ) : (
+        <Toast config={toastConfig} />
+      )}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import { AppText } from "@/components/ui/AppText";
-import { Radius, Spacing } from "@/theme";
+import { Spacing } from "@/theme";
 import { useTheme } from "@/theme/use-theme";
 import { StyleSheet, View } from "react-native";
 import type { BaseToastProps } from "react-native-toast-message";
@@ -26,10 +26,6 @@ const AppToast = ({ text1, text2, type }: AppToastProps) => {
         },
       ]}
     >
-      <View style={styles.icon}>
-        <AppText style={styles.iconText}>{isSuccess ? "✓" : "!"}</AppText>
-      </View>
-
       <View style={styles.content}>
         {/* {text1 && (
           <AppText variant="smallBold" style={styles.title}>
@@ -58,25 +54,10 @@ export const toastConfig = {
 const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
   StyleSheet.create({
     container: {
-      width: "60%",
-      // marginHorizontal: Spacing.lg,
-      borderRadius: Radius.lg,
-      borderWidth: 1,
       flexDirection: "row",
       alignItems: "center",
       gap: Spacing.xs,
-      padding: Spacing.sm,
-    },
-
-    icon: {
-      width: 32,
-      height: 32,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-
-    iconText: {
-      color: colors.onPrimary,
+      padding: Spacing.lg,
     },
 
     content: {
